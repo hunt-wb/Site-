@@ -1,0 +1,65 @@
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+&lt;meta charset="UTF-8" /&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"/&gt;
+&lt;title&gt;Inventory&lt;/title&gt;
+&lt;script src="/socket.io/socket.io.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;Inventory List&lt;/h1&gt;
+&lt;ul id="product-list"&gt;&lt;/ul&gt;
+
+&lt;h2&gt;Add New Product&lt;/h2&gt;
+&lt;form id="product-form"&gt;
+  Name: &lt;input type="text" id="name" required /&gt;&lt;br/&gt;
+  Category: &lt;input type="text" id="category" required /&gt;&lt;br/&gt;
+  Price: &lt;input type="number" id="price" required /&gt;&lt;br/&gt;
+  Quantity: &lt;input type="number" id="quantity" required /&gt;&lt;br/&gt;
+  &lt;button type="submit"&gt;Add Product&lt;/button&gt;
+&lt;/form&gt;
+
+&lt;script&gt;
+const socket = io();
+
+const productList = document.getElementById('product-list');
+
+// Function to fetch and display products
+async function loadProducts() {
+  const res = await fetch('/api/products');
+  const products = await res.json();
+  productList.innerHTML = '';
+  products.forEach(p =&gt; {
+    const li = document.createElement('li');
+    li.textContent = `${p.name} (${p.category}) - $${p.price} - Qty: ${p.quantity}`;
+    productList.appendChild(li);
+  });
+}
+
+// Listen for real-time updates
+socket.on('stockUpdated', (product) =&gt; {
+  loadProducts(); // Refresh list
+});
+
+// Submit form to add product
+document.getElementById('product-form').addEventListener('submit', async (e) =&gt; {
+  e.preventDefault();
+  const newProduct = {
+    name: document.getElementById('name').value,
+    category: document.getElementById('category').value,
+    price: parseFloat(document.getElementById('price').value),
+    quantity: parseInt(document.getElementById('quantity').value),
+  };
+  await fetch('/api/products', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newProduct),
+  });
+  document.getElementById('product-form').reset();
+});
+
+// Initial load
+loadProducts();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;

@@ -1,0 +1,4 @@
+mkdir ellys-inventory
+cd ellys-inventory
+npm init -y
+npm install express socket.io mongoose
